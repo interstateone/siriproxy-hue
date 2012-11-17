@@ -24,6 +24,7 @@ Follow the plugin install instructions from [SiriProxy](https://github.com/jimmy
 - A valid request will return {"success":{"username":"YourMD5Hash"}}
 - Store this MD5 hash in the hueKey class variable in lib/siriproxy-hue.rb
 - Store the Hue's local IP address in the hueIP class variable
+- Add the hue gem to the SiriProxy config file, run `siriproxy bundle` from it's directory and restart the server
 
 ## Credit ##
 

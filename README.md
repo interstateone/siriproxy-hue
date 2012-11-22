@@ -2,10 +2,6 @@
 
 This is a SiriProxy plugin to control Philips Hue lights with Siri. It has been developed for and tested with jimmykane's [Three Little Pigs fork](https://github.com/jimmykane/The-Three-Little-Pigs-Siri-Proxy) of [SiriProxy](https://github.com/plamoni/SiriProxy), although the plugin APIs look very similar and for now it may work with both.
 
-## Installation Notes ##
-
-Follow the plugin install instructions from [SiriProxy](https://github.com/jimmykane/The-Three-Little-Pigs-Siri-Proxy/wiki/Plugin%20Developer%20Guide). I had some trouble until I made sure that libmysql-dev was also installed before I could `rake install` SiriProxy, so use your preferred package manager to do that if necessary.
-
 ## Example Commands ##
 
 - Turn off *all* the lights
@@ -24,7 +20,7 @@ Follow the plugin install instructions from [SiriProxy](https://github.com/jimmy
 - A valid request will return {"success":{"username":"YourMD5Hash"}}
 - Store this MD5 hash in the hueKey class variable in lib/siriproxy-hue.rb
 - Store the Hue's local IP address in the hueIP class variable
-- Add the hue gem to the SiriProxy config file, run `siriproxy bundle` from it's directory and restart the server
+- Follow the plugin install instructions from [SiriProxy](https://github.com/jimmykane/The-Three-Little-Pigs-Siri-Proxy/wiki/Plugin%20Developer%20Guide). I had some trouble until I made sure that libmysql-dev was also installed before I could `rake install` SiriProxy, so use your preferred package manager to do that if necessary.
 
 ## Credit ##
 

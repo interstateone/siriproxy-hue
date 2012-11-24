@@ -3,6 +3,7 @@ require "siri_objects"
 require "pp"
 require "rest_client" # HTTP requests
 require "json" # Parse Hue responses
+require "matrix"
 
 ################################################################################
 #
@@ -62,8 +63,9 @@ class HueEntity
     end
   end
 
-  def color (value)
-
+  def color (hue)
+    url = "#{@@hueIP}/api/#{@@hueKey}/lights/#{@number}/state"
+    RestClient.put(url, {hue: 182*hue, sat: 254}.to_json, content_type: :json)
   end
 end
 
@@ -139,14 +141,16 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
       request_completed
     end
 
-    value = parseNumbers(value)
-    if (is_numeric? value)
-      log value
-      matchedEntity.brightness(value.to_i)
+    numericValue = parseNumbers(value)
+    if (is_numeric? numericValue)
+      log numericValue
+      matchedEntity.brightness(numericValue.to_i)
     else
-      # query color for hsl value
-      query = "http://www.colourlovers.com/api/colors?keywords=#{query}&numResults=1&format=json"
-      # set entity to color value
+      # query colourlovers for first rgb value from the given string
+      url = "http://www.colourlovers.com/api/colors?keywords=#{value}&numResults=1&format=json"
+      response = RestClient.get(url)
+      data = JSON.parse(response)[0]["hsv"]
+      matchedEntity.color(data["hue"])
     end
 
     say "There you go."

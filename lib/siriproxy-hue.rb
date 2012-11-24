@@ -12,7 +12,7 @@ require "json" # Parse Hue responses
 
 
 class HueEntity
-  @@hueIP = "10.0.1.12"
+  @@hueIP = "10.0.1.16"
   @@hueKey = "7dcdc2716a5c8796367968c47ad7d44c"
 
   attr_accessor :type

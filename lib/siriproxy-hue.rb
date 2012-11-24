@@ -69,7 +69,6 @@ end
 
 class SiriProxy::Plugin::Hue < SiriProxy::Plugin
   def parseNumbers (value)
-    value = value.sub_numbers
     if (value =~ /%/)
       value = value.delete("%").to_i * 254 / 100 # 254 is max brightness value
     end

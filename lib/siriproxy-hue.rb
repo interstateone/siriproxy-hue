@@ -79,7 +79,7 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
   end
 
   # Binary state
-  listen_for /turn (on|off)(?: the)? ([a-z]*)/i do |state, entity|
+  listen_for %r/turn (on|off)(?: the)? ([a-z]*)/i do |state, entity|
     unless(matchedEntity = HueEntity.new(entity))
       say "I couldn't find any lights by that name."
       request_completed
@@ -102,7 +102,7 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
   end
 
   # Relative brightness change
-  listen_for /turn (up|down)(?: the)? ([a-z]*)/i do |change, entity|
+  listen_for %r/turn (up|down)(?: the)? ([a-z]*)/i do |change, entity|
     unless(matchedEntity = HueEntity.new(entity))
       say "I couldn't find any lights by that name."
       request_completed
@@ -132,8 +132,8 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
 
   # Absolute brightness/color change
   #   Numbers (0-254) and percentages (0-100) are treated as brightness values
-  #   Strings are used as a color query to lookup HSV values
-  listen_for /set(?: the)? ([a-z]*) to ([a-z0-9%]*)/i do |entity, value|
+  #   Single words are used as a color query to lookup HSV values
+  listen_for %r/set(?: the)? ([a-z]*) to ([a-z0-9%]*)/i do |entity, value|
     unless(matchedEntity = HueEntity.new(entity))
       say "I couldn't find any lights by that name."
       request_completed
@@ -155,9 +155,7 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
   end
 
   # Scenes
-  listen_for /make it look like a (.+)/i do |scene|
-    # do a google image request
-    # use the first result
+  listen_for %r/make it look like a (.+)/i do |scene|
     # pull n colors, where n is the number of lights
     # set each light to color[i]
     request_completed

@@ -8,7 +8,7 @@ This is a SiriProxy plugin to control Philips Hue lights with Siri. It has been 
 - Turn on the *bedroom* light
 - Turn up the *kitchen*
 - Set the hallway to *20%*
-- Set the bedroom to *light blue* (colors not implemented yet)
+- Set the bedroom to *green*
 - Make it look like a *sunset* (scenes not implemented yet)
 
 ## Initial setup ##

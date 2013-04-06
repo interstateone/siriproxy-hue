@@ -3,7 +3,7 @@ $:.push File.expand_path("../lib", __FILE__)
 
 Gem::Specification.new do |s|
   s.name        = "siriproxy-hue"
-  s.version     = "0.0.1"
+  s.version     = "0.0.2"
   s.authors     = "interstateone"
   s.email       = "brandon@brandonevans.ca"
   s.homepage    = "http://www.brandonevans.ca"
@@ -15,7 +15,6 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/* 2> /dev/null`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  # specify any dependencies here; for example:
   s.add_runtime_dependency "rest-client"
   s.add_runtime_dependency "json"
 end

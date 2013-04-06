@@ -1,75 +1,61 @@
+# SiriProxy-Hue
+# https://github.com/interstateone/siriproxy-hue
+# copyright 2013, Brandon Evans
+#
+# Released under MIT License
+
+# SiriProxy Plugin Requirements
 require "cora"
 require "siri_objects"
 require "pp"
+
 require "rest_client" # HTTP requests
 require "json" # Parse Hue responses
-require "matrix"
-
-################################################################################
-#
-# Hue got me babe
-#
-################################################################################
-
-
-class HueEntity
-  @@hueIP = "10.0.1.16"
-  @@hueKey = "7dcdc2716a5c8796367968c47ad7d44c"
-
-  attr_accessor :type
-  attr_accessor :name
-  attr_accessor :number
-
-  def initialize (capturedString)
-    response = RestClient.get("#{@@hueIP}/api/#{@@hueKey}")
-    data = JSON.parse(response)
-    lights = data["lights"].map do |key, light|
-      {type: :light, name: light["name"].to_s, number: key.to_i}
-    end
-    lights.push({type: :group, name: "all", number: 0})
-    result = lights.select { |light| light[:name].to_s.downcase == capturedString }
-    result = result[0]
-
-    if result.empty? then return false end
-
-    @type = result[:type]
-    @number = result[:number]
-    @name = result[:name]
-  end
-
-  def power (value)
-    if self.type == :group
-      url = "#{@@hueIP}/api/#{@@hueKey}/groups/#{@number}/action"
-    else
-      url = "#{@@hueIP}/api/#{@@hueKey}/lights/#{@number}/state"
-    end
-    RestClient.put(url, {on: value}.to_json, content_type: :json)
-  end
-
-  def brightness (*args)
-    if args.size < 1
-      url = "#{@@hueIP}/api/#{@@hueKey}/lights/#{@number}"
-      response = RestClient.get(url)
-      data = JSON.parse(response)
-      brightness = data["state"]["bri"].to_i
-      return brightness
-    elsif args.size == 1
-      value = args[0]
-      if (value > 254) then value = 254
-      elsif (value < 0) then value = 0
-      end
-      url = "#{@@hueIP}/api/#{@@hueKey}/lights/#{@number}/state"
-      RestClient.put(url, {:bri => value}.to_json, content_type: :json)
-    end
-  end
-
-  def color (hue)
-    url = "#{@@hueIP}/api/#{@@hueKey}/lights/#{@number}/state"
-    RestClient.put(url, {hue: 182*hue, sat: 254}.to_json, content_type: :json)
-  end
-end
+require "matrix" # Color space transformations
+require "hue-entity"
 
 class SiriProxy::Plugin::Hue < SiriProxy::Plugin
+  def initialize (config)
+    @@bridgeIP = config['bridge_ip']
+    @@username = config['username']
+    @@registering = false
+    @@registered = false
+  end
+
+  def checkRegistration
+    if @@registered then return end
+
+    url = "#{@@bridgeIP}/api/#{@@username}"
+    response = RestClient.get(url)
+    data = JSON.parse(response)
+    if data.kind_of?(Array)
+      data = data[0]
+    end
+
+    if data.has_key? "error"
+      # Unregistered username
+      @@registering = true
+      response = ask "I just need to finish setting up: say \"Ready\" after you've pressed the link utton on your Hue bridge."
+      if response =~ /ready/i
+        url = "#{@@bridgeIP}/api"
+        data = {devicetype: "siriproxy", username: "#{@@username}"}.to_json
+        response = RestClient.post(url, data, content_type: :json)
+        request_completed
+        checkRegistration
+      end
+    else
+      # Success
+      if @@registering
+        @@registering = false
+        say "Thanks, you're ready to go."
+        request_completed
+        @@registered = true
+      else
+        @@registered = true
+      end
+    end
+  end
+
   def parseNumbers (value)
     if (value =~ /%/)
       value = value.delete("%").to_i * 254 / 100 # 254 is max brightness value
@@ -82,7 +68,8 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
 
   # Binary state
   listen_for %r/turn (on|off)(?: the)? ([a-z]*)/i do |state, entity|
-    unless(matchedEntity = HueEntity.new(entity))
+    checkRegistration
+    unless(matchedEntity = HueEntity.new(entity, @@bridgeIP, @@username))
       say "I couldn't find any lights by that name."
       request_completed
     end
@@ -105,7 +92,8 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
 
   # Relative brightness change
   listen_for %r/turn (up|down)(?: the)? ([a-z]*)/i do |change, entity|
-    unless(matchedEntity = HueEntity.new(entity))
+    checkRegistration
+    unless(matchedEntity = HueEntity.new(entity, @@bridgeIP, @@username))
       say "I couldn't find any lights by that name."
       request_completed
     end
@@ -136,7 +124,8 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
   #   Numbers (0-254) and percentages (0-100) are treated as brightness values
   #   Single words are used as a color query to lookup HSV values
   listen_for %r/set(?: the)? ([a-z]*) to ([a-z0-9%]*)/i do |entity, value|
-    unless(matchedEntity = HueEntity.new(entity))
+    checkRegistration
+    unless(matchedEntity = HueEntity.new(entity, @@bridgeIP, @@username))
       say "I couldn't find any lights by that name."
       request_completed
     end
@@ -160,6 +149,7 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
 
   # Scenes
   listen_for %r/make it look like a (.+)/i do |scene|
+    checkRegistration
     # pull n colors, where n is the number of lights
     # set each light to color[i]
     request_completed

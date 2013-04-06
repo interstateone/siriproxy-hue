@@ -1,3 +1,9 @@
+# SiriProxy-Hue
+# https://github.com/interstateone/siriproxy-hue
+# copyright 2013, Brandon Evans
+#
+# Released under MIT License
+
 class HueEntity
   attr_accessor :type
   attr_accessor :name

@@ -1,6 +1,7 @@
 # SiriProxy-Hue #
 
 [![Code Climate](https://codeclimate.com/github/interstateone/siriproxy-hue.png)](https://codeclimate.com/github/interstateone/siriproxy-hue)
+[![Dependency Status](https://gemnasium.com/interstateone/siriproxy-hue.png)](https://gemnasium.com/interstateone/siriproxy-hue)
 
 This is a SiriProxy plugin to control Philips Hue lights with Siri. It has been developed for and tested with jimmykane's [Three Little Pigs fork](https://github.com/jimmykane/The-Three-Little-Pigs-Siri-Proxy) of [SiriProxy](https://github.com/plamoni/SiriProxy), although the plugin APIs look very similar and for now it may work with both.
 

@@ -66,17 +66,22 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
     obj.to_s.match(/\A[+-]?\d+?(\.\d+)?\Z/) == nil ? false : true
   end
 
-  # Binary state
-  listen_for %r/turn (on|off)(?: the)? ([a-z]*)/i do |state, entity|
-    checkRegistration
+  def ensureMatchedEntity(entity)
     unless(matchedEntity = HueEntity.new(entity, @@bridgeIP, @@username))
       say "I couldn't find any lights by that name."
       request_completed
+      return
+    end
+    matchedEntity
+  end
+
+  def switchEntity(state, matchedEntity)
+    if (state == "on")
+      matchedEntity.power(true)
+    else
+      matchedEntity.power(false)
     end
 
-    if (state == "on") then matchedEntity.power(true)
-    else matchedEntity.power(false)
-    end
     if matchedEntity.type == :group
       if matchedEntity.name == "all"
         say "I've turned #{state} all of the lights for you."
@@ -86,22 +91,16 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
     else
       say "I've turned #{state} the #{entity} light for you."
     end
-
     request_completed
   end
 
-  # Relative brightness change
-  listen_for %r/turn (up|down)(?: the)? ([a-z]*)/i do |change, entity|
-    checkRegistration
-    unless(matchedEntity = HueEntity.new(entity, @@bridgeIP, @@username))
-      say "I couldn't find any lights by that name."
-      request_completed
-    end
-
+  def setRelativeBrightness(change, matchedEntity)
     currentBrightness = matchedEntity.brightness
 
-    if (change == "up") then newBrightness = currentBrightness + 50
-    else newBrightness = currentBrightness - 50
+    if (change == "up")
+      newBrightness = currentBrightness + 50
+    else
+      newBrightness = currentBrightness - 50
     end
     matchedEntity.brightness(newBrightness)
 
@@ -110,8 +109,10 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
     if (response =~ /yes/i)
       say "I'm happy to help."
     elsif (response =~ /more|no/i)
-      if (change == "up") then newBrightness += 50
-      else newBrightness -= 50
+      if (change == "up")
+        newBrightness += 50
+      else
+        newBrightness -= 50
       end
       matchedEntity.brightness(newBrightness)
       say "You're right, that does look better"
@@ -120,16 +121,7 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
     request_completed
   end
 
-  # Absolute brightness/color change
-  #   Numbers (0-254) and percentages (0-100) are treated as brightness values
-  #   Single words are used as a color query to lookup HSV values
-  listen_for %r/set(?: the)? ([a-z]*) to ([a-z0-9%]*)/i do |entity, value|
-    checkRegistration
-    unless(matchedEntity = HueEntity.new(entity, @@bridgeIP, @@username))
-      say "I couldn't find any lights by that name."
-      request_completed
-    end
-
+  def setAbsoluteBrightness(value, matchedEntity)
     numericValue = parseNumbers(value)
     if (is_numeric? numericValue)
       log numericValue
@@ -143,11 +135,33 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
     end
 
     say "There you go."
-
     request_completed
   end
 
-  # Scenes
+  # Binary state
+  listen_for %r/turn (on|off)(?: the)? ([a-z]*)/i do |state, entity|
+    checkRegistration
+    matchedEntity = ensureMatchedEntity(entity)
+    switchEntity(state, matchedEntity)
+  end
+
+  # Relative brightness
+  listen_for %r/turn (up|down)(?: the)? ([a-z]*)/i do |change, entity|
+    checkRegistration
+    matchedEntity = ensureMatchedEntity(entity)
+    setRelativeBrightness(change, matchedEntity)
+  end
+
+  # Absolute brightness/color change
+  #   Numbers (0-254) and percentages (0-100) are treated as brightness values
+  #   Single words are used as a color query to lookup HSV values
+  listen_for %r/set(?: the)? ([a-z]*) to ([a-z0-9%]*)/i do |entity, value|
+    checkRegistration
+    matchedEntity = ensureMatchedEntity(entity)
+    setAbsoluteBrightness(value, matchedEntity)
+  end
+
+  # TODO Scenes
   listen_for %r/make it look like a (.+)/i do |scene|
     checkRegistration
     # pull n colors, where n is the number of lights

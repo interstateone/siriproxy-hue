@@ -52,6 +52,11 @@ class HueEntity
     
     def color (hue)
         url = "#{@bridgeIP}/api/#{@username}/lights/#{@number}/state"
-        RestClient.put(url, {hue: 182*hue, sat: 254}.to_json, content_type: :json)
+        if hue.zero? then 
+          sat = 0 
+        else 
+          sat=254 
+        end
+        RestClient.put(url, {hue: 182*hue, sat: sat}.to_json, content_type: :json)
     end
 end

@@ -132,6 +132,7 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
             else
             # query colourlovers for first rgb value from the given string
             url = "http://www.colourlovers.com/api/colors?keywords=#{value}&numResults=1&format=json"
+            url.gsub!(/\s/,'%20')
             response = RestClient.get(url)
             data = JSON.parse(response)[0]["hsv"]
             matchedEntity.color(data["hue"])
@@ -140,35 +141,34 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
         say "There you go."
         request_completed
     end
-    
     # Binary state
-    listen_for %r/turn (on|off)(?: the)? ([a-z]*)/i do |state, entity|
-    checkRegistration
-    matchedEntity = ensureMatchedEntity(entity)
-    switchEntity(state, matchedEntity)
-end
+      listen_for %r/turn (on|off)(?: the)? ([a-z ]*) light(?:s)?/i do |state, entity|
+        checkRegistration
+        matchedEntity = ensureMatchedEntity(entity)
+        switchEntity(state, matchedEntity)
+      end
 
-# Relative brightness
-listen_for %r/turn (up|down)(?: the)? ([a-z]*)/i do |change, entity|
-    checkRegistration
-    matchedEntity = ensureMatchedEntity(entity)
-    setRelativeBrightness(change, matchedEntity)
-end
+      # Relative brightness
+      listen_for %r/turn (up|down)(?: the)? ([a-z ]*) light(?:s)?/i do |change, entity|
+        checkRegistration
+        matchedEntity = ensureMatchedEntity(entity)
+        setRelativeBrightness(change, matchedEntity)
+      end
 
-# Absolute brightness/color change
-#   Numbers (0-254) and percentages (0-100) are treated as brightness values
-#   Single words are used as a color query to lookup HSV values
-listen_for %r/set(?: the)? ([a-z]*) to ([a-z0-9%]*)/i do |entity, value|
-    checkRegistration
-    matchedEntity = ensureMatchedEntity(entity)
-    setAbsoluteBrightness(value, matchedEntity)
-end
+      # Absolute brightness/color change
+      #   Numbers (0-254) and percentages (0-100) are treated as brightness values
+      #   Single words are used as a color query to lookup HSV values
+      listen_for %r/set(?: the)? ([a-z ]*) light(?:s)? to ([a-z0-9% ]*)/i do |entity, value|
+        checkRegistration
+        matchedEntity = ensureMatchedEntity(entity)
+        setAbsoluteBrightness(value, matchedEntity)
+      end
 
-# TODO Scenes
-listen_for %r/make it look like a (.+)/i do |scene|
-    checkRegistration
-    # pull n colors, where n is the number of lights
-    # set each light to color[i]
-    request_completed
-end
-end
+      # TODO Scenes
+      listen_for %r/make it look like a (.+)/i do |scene|
+        checkRegistration
+        # pull n colors, where n is the number of lights
+        # set each light to color[i]
+        request_completed
+      end
+    end

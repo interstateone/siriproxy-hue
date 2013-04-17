@@ -134,8 +134,13 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
             url = "http://www.colourlovers.com/api/colors?keywords=#{value}&numResults=1&format=json"
             url.gsub!(/\s/,'%20')
             response = RestClient.get(url)
-            data = JSON.parse(response)[0]["hsv"]
-            matchedEntity.color(data["hue"])
+            if response.eql?("[]") then
+              say "I couldn't find the color"
+              request_completed
+            else
+              data = JSON.parse(response)[0]["hsv"]
+              matchedEntity.color(data["hue"], data["saturation"])
+            end     
         end
         
         say "There you go."

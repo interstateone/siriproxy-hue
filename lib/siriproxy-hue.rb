@@ -129,17 +129,18 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
         if (is_numeric? numericValue)
             log numericValue
             matchedEntity.brightness(numericValue.to_i)
-            else
+        else
             # query colourlovers for first rgb value from the given string
             url = "http://www.colourlovers.com/api/colors?keywords=#{value}&numResults=1&format=json"
             url.gsub!(/\s/,'%20')
             response = RestClient.get(url)
             if response.eql?("[]") then
-              say "I couldn't find the color"
+              say "I couldn't find any color by that name."
               request_completed
             else
-              data = JSON.parse(response)[0]["hsv"]
-              matchedEntity.color(data["hue"], data["saturation"])
+              data_rgb = JSON.parse(response)[0]["rgb"]
+              data_hsv = JSON.parse(response)[0]["hsv"]
+              matchedEntity.color(data_rgb["red"], data_rgb["green"], data_rgb["blue"], data_hsv["saturation"])
             end     
         end
         

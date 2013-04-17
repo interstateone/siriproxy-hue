@@ -50,8 +50,13 @@ class HueEntity
         end
     end
     
-    def color (hue, satu)
+    def color (red, green, blue, saturation)
+        calcX = (1.076450 * red.to_i) - (0.237662 * green.to_i) + (0.161212 * blue.to_i)
+        calcY = (0.410964 * red.to_i) + (0.554342 * green.to_i) + (0.034694 * blue.to_i)
+        calcZ = (-0.010954 * red.to_i) - (0.013389 * green.to_i) + (1.024343 * blue.to_i)
+        x = calcX/(calcX + calcY + calcZ)
+        y = calcY/(calcX + calcY + calcZ)
         url = "#{@bridgeIP}/api/#{@username}/lights/#{@number}/state"
-        RestClient.put(url, {hue: 182*hue, sat: (satu*2.54).to_i}.to_json, content_type: :json)
+        RestClient.put(url, {xy: [x,y], sat: (saturation*2.54).to_i}.to_json, content_type: :json)
     end
 end

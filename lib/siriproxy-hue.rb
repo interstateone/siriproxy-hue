@@ -146,14 +146,14 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
 		request_completed
 	end
 	# Binary state
-	listen_for %r/turn (on|off)(?: the)? ([a-z ]*) light(?:s)?/i do |state, entity|
+	listen_for %r/turn (on|off)(?: the)? ([a-z ]??*)(?: the)? light(?:s)?/i do |state, entity|
 		checkRegistration
 		matchedEntity = ensureMatchedEntity(entity)
 		switchEntity(state, matchedEntity)
 	end
 
 	# Relative brightness
-	listen_for %r/turn (up|down)(?: the)? ([a-z ]*) light(?:s)?/i do |change, entity|
+	listen_for %r/turn (up|down)(?: the)? ([a-z ]??*)(?: the)? light(?:s)?/i do |change, entity|
 		checkRegistration
 		matchedEntity = ensureMatchedEntity(entity)
 		setRelativeBrightness(change, matchedEntity)
@@ -162,7 +162,7 @@ class SiriProxy::Plugin::Hue < SiriProxy::Plugin
 	# Absolute brightness/color change
 	#   Numbers (0-254) and percentages (0-100) are treated as brightness values
 	#   Single words are used as a color query to lookup HSV values
-	listen_for %r/set(?: the)? ([a-z ]*) light(?:s)? to ([a-z0-9% ]*)/i do |entity, value|
+	listen_for %r/set(?: the)? ([a-z ]??*)(?: the)? light(?:s)? to ([a-z0-9% ]*)/i do |entity, value|
 		checkRegistration
 		matchedEntity = ensureMatchedEntity(entity)
 		setAbsoluteBrightness(value, matchedEntity)
